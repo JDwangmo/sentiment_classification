@@ -2,6 +2,8 @@
 
 ### Overview:
 This repository is about English text sentiment classification tasks. The dataset has been collected from several paper. Some experiments is reproduced using python. I will maintain a list for several papers using these data and make comparison of results.
+###### See also
+http://neuro.imm.dtu.dk/wiki/Sentiment_analysis: The more detailed information of sentiment analysis can be learned from here, including concepts, data set, related papers... 
 
 ### [Data Detail](https://github.com/JDwangmo/sentiment_classification/tree/master/dataset/公开数据集.xlsx)
 
@@ -21,3 +23,4 @@ This repository is about English text sentiment classification tasks. The datase
 > Theano
 > Keras
 > pandas
+> nltk
