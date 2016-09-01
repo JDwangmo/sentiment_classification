@@ -15,3 +15,9 @@ This repository is about English text sentiment classification tasks. The datase
 
 ![Related Papers](https://raw.githubusercontent.com/JDwangmo/sentiment_classification/master/dataset/related_papers.png "Related Papers")
 
+### Requirements
+> Python 2.7
+> Numpy
+> Theano
+> Keras
+> pandas
