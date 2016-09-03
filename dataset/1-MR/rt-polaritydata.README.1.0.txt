@@ -1,3 +1,7 @@
+官方数据集编码好像有点问题，现使用的
+    - rt-polarity.neg.utf8
+    - rt-polarity.pos.utf8
+均来自 https://github.com/JDwangmo/cnn-text-classification-tf，使用UTF8编码
 
 =======
 

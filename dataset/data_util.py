@@ -52,7 +52,6 @@ class DataUtil(object):
         # 小写
         return string.strip().lower()
 
-
     def transform_word2vec_model_name(self,flag):
         '''
             根据 flag 转换成完整的 word2vec 模型文件名
@@ -61,21 +60,10 @@ class DataUtil(object):
         :return:
         '''
 
-        if flag == '50d_weibo_100w':
-            word2vec_model_file_path = self.word2vec_model_root_path + '50dim/vector1000000_50dim.gem'
-        elif flag == '50d_weibo_1000w':
-            word2vec_model_file_path = self.word2vec_model_root_path + '50dim/vector10000000_50dim.gem'
-        elif flag == '50d_sogou':
-            word2vec_model_file_path = self.word2vec_model_root_path + '50dim/08-12Sogou.gensim'
-        elif flag == '50d_v2.3Sa_word':
-            word2vec_model_file_path = self.word2vec_model_root_path + '50dim/v2.3_train_Sa_891_word_50dim.gem'
+        from data_processing_util.word2vec_util.word2vec_util import Word2vecUtil
+        w2v_util = Word2vecUtil()
 
-        elif flag == '300d_weibo_100w':
-            word2vec_model_file_path = self.word2vec_model_root_path + '300dim/vector1000000_300dim.gem'
-        else:
-            word2vec_model_file_path = self.word2vec_model_root_path + '50dim/vector1000000_50dim.gem'
-
-        return word2vec_model_file_path
+        return w2v_util.transform_word2vec_model_name(flag)
 
     def load_data(self, path=None, read_type='txt'):
         """
