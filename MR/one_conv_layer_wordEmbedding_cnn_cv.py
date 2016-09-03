@@ -21,11 +21,13 @@ train_y = train_data['LABEL'].as_matrix()
 # region 2、交叉验证
 from deep_learning.cnn.wordEmbedding_cnn.example.one_conv_layer_wordEmbedding_cnn import WordEmbeddingCNNWithOneConv
 
-input_length = 60
+input_length = 64
 word_embedding_dim = 300
 WordEmbeddingCNNWithOneConv.cross_validation(
     train_data=(train_x, train_y),
     test_data=(train_x, train_y),
+    include_train_data =False,
+    need_validation=True,
     cv=10,
     num_labels=2,
     need_segmented=False,
