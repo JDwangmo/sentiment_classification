@@ -40,6 +40,8 @@ if option == 'cv':
         include_train_data=False,
         need_validation=True,
         vocabulary_including_test_set=True,
+        rand_weight=False,
+        embedding_weight_trainable=True,
         cv=10,
         num_labels=2,
         need_segmented=False,
