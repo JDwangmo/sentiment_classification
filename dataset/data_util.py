@@ -11,13 +11,13 @@ import pandas as pd
 import re
 from data_processing_util.cross_validation_util import get_splitted_k_fold_data_index
 
+
 class DataUtil(object):
     def __init__(self):
         self.project_file = '/home/jdwang/PycharmProjects/sentiment_classification/'
         self.word2vec_model_root_path = '/home/jdwang/PycharmProjects/corprocessor/word2vec/vector/'
 
-
-    def clean_str(self,string):
+    def clean_str(self, string):
         """
             处理/清理文本
 
@@ -52,7 +52,7 @@ class DataUtil(object):
         # 小写
         return string.strip().lower()
 
-    def transform_word2vec_model_name(self,flag):
+    def transform_word2vec_model_name(self, flag):
         '''
             根据 flag 转换成完整的 word2vec 模型文件名
 
@@ -74,15 +74,15 @@ class DataUtil(object):
         :return: texts
         :rtype: list
         """
-        texts= []
-        with open(path,'r') as fin:
+        texts = []
+        with open(path, 'r') as fin:
             for line in fin:
                 line = line.strip()
                 texts.append(line)
 
         return texts
 
-    def get_mr_dataset(self,clean_data=True,cv = 3):
+    def get_mr_dataset(self, clean_data=True, cv=3):
         """
             获取 MR 数据集
         :param cv: 进行 cv 交叉验证 ，分数据
@@ -96,22 +96,22 @@ class DataUtil(object):
         # 5331 negative snippets
         neg_polarity_file_path = self.project_file + 'dataset/1-MR/rt-polaritydata/rt-polarity.neg.utf8'
 
-        pos_texts = self.load_data(pos_polarity_file_path,read_type='txt')
-        neg_texts = self.load_data(neg_polarity_file_path,read_type='txt')
-        texts = pos_texts+neg_texts
+        pos_texts = self.load_data(pos_polarity_file_path, read_type='txt')
+        neg_texts = self.load_data(neg_polarity_file_path, read_type='txt')
+        texts = pos_texts + neg_texts
         if clean_data:
-            texts = map(self.clean_str,texts)
+            texts = map(self.clean_str, texts)
 
-        labels = [1]*len(pos_texts) + [0]*len(neg_texts)
+        labels = [1] * len(pos_texts) + [0] * len(neg_texts)
         # 按类别将数据分为10份，将数据 都标上 份数索引
         cv_index = get_splitted_k_fold_data_index(
             k=cv,
-            data=(texts,labels),
+            data=(texts, labels),
             rand_seed=0,
         )
         data = pd.DataFrame(data={
-            'TEXT':texts,
-            'LABEL':labels,
+            'TEXT': texts,
+            'LABEL': labels,
             'CV_INDEX': cv_index,
         })
 
@@ -125,7 +125,41 @@ class DataUtil(object):
             raise NotImplementedError
 
 
+def output_validation_result(path, version='CNN-A00', step=1):
+    """将验证结果的文件提取出数据信息
+
+    Parameters
+    ----------
+    path : str
+        路径信息
+    version : str,
+        哪个模型版本的验证输出文件
+    step : int
+        步骤
+
+    Raises
+    --------
+    NotImplementedError
+    """
+
+    with open(path, 'r') as fout:
+        for line in fout:
+            line = line.strip()
+            if version == 'CNN-A00':
+                if step == 1:
+                    if line.startswith('num_filter is '):
+                        print(line.replace('num_filter is ', '').replace('.', ''))
+                if step == 2:
+                    if line.startswith('测试结果汇总：'):
+                        print(line.replace('测试结果汇总：[', '').replace(']', ''))
+                if step == 3:
+                    if line.startswith('验证中训练数据结果：'):
+                        print(line.replace('验证中训练数据结果：[', '').replace(']', ''))
+            else:
+                raise NotImplementedError
 
 if __name__ == '__main__':
-    dutil = DataUtil()
-    dutil.get_train_test_data(version='MR')
+    # dutil = DataUtil()
+    # dutil.get_train_test_data(version='MR')
+    output_validation_result('/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_cnn-static-w2v_cv.txt',
+                             version='CNN-A00',step=1)
