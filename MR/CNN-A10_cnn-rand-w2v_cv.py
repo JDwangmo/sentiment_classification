@@ -12,8 +12,8 @@
 """
 
 # region -------------- 0、参数设置 -------------
-option='cv'
-# option = 'output_cv_result'
+# option='cv'
+option = 'output_cv_result'
 
 # endregion -------------- 0、参数设置 ---------------
 
@@ -59,8 +59,8 @@ if option == 'cv':
 if option=='output_cv_result':
     from dataset.data_util import output_validation_result
     output_validation_result(
-        path='/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_CNN-A30_cnn-non-static-w2v_cv.txt',
+        path='/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_CNN-A10_cnn-rand_cv.txt',
         version='CNN-A00',
-        step=3
+        step=2
     )
 # endregion -------------- 3、提取出验证结果的数据 ---------------
