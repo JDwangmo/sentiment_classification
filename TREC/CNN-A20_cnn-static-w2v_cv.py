@@ -12,38 +12,57 @@
 """
 
 # region -------------- 0、参数设置 -------------
-# option='cv'
-option = 'output_cv_result'
+option='cv'
+# option = 'output_cv_result'
+
+# endregion -------------- 0、参数设置 ---------------
+
 
 # endregion -------------- 0、参数设置 ---------------
 
 
 # region 1、加载数据集
 from dataset.data_util import DataUtil
+import numpy as np
 
+data_version = 'TREC'
 data_util = DataUtil()
-train_data = data_util.get_train_test_data(version='MR')
+data = data_util.get_train_test_data(version=data_version)
+# 分为 train 、test 、dev 集
+train_data = data.loc[data['SPLITSET_LABEL'] == 1]
+test_data = data[data['SPLITSET_LABEL'] == 2]
 
 train_x = train_data['TEXT'].as_matrix()
 train_y = train_data['LABEL'].as_matrix()
+test_x = test_data['TEXT'].as_matrix()
+test_y = test_data['LABEL'].as_matrix()
+print('train个数：%s, test个数：%s' % (train_data.shape[0], test_data.shape[0] ))
+cv_data = [
+    (0, train_x, train_y, test_x, test_y),
+]
+
+
 # endregion
 
 # region 2、交叉验证
 if option == 'cv':
     from deep_learning.cnn.wordEmbedding_cnn.example.one_conv_layer_wordEmbedding_cnn import WordEmbeddingCNNWithOneConv
 
-    input_length = 64
+    # 句子最长长度为：38
+    # 句子最短长度为：3
+    # 句子平均长度为：11
+    input_length = 46
     word_embedding_dim = 300
     WordEmbeddingCNNWithOneConv.cross_validation(
-        train_data=(train_x, train_y),
-        test_data=(train_x, train_y),
-        include_train_data=False,
-        need_validation=True,
+        # train_data=(train_x, train_y),
+        # test_data=(train_x, train_y),
+        cv_data=cv_data,
+        need_validation=False,
         vocabulary_including_test_set=True,
         embedding_weight_trainable=False,
         rand_weight=False,
-        cv=10,
-        num_labels=2,
+        cv=1,
+        num_labels=6,
         need_segmented=False,
         nb_batch=50,
         input_length=input_length,

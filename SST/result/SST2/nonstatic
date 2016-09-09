@@ -1,0 +1,30 @@
+/usr/bin/python2.7 /home/jdwang/PycharmProjects/sentiment_classification/SST/CNN-A30_cnn-non-static-w2v_cv.py
+The version of data set is : SST-2
+train个数：6920, test个数：872, dev个数:1821
+================================================================================
+feature_type:word,need_segmented:False,vocabulary_including_test_set:True
+rand_weight:False,embedding_weight_trainable:True
+================================================================================
+========================================
+num_filter is 100.
+K折交叉验证开始...
+--------------------------------------------------------------------------------
+训练:
+Using Theano backend.
+/usr/local/lib/python2.7/dist-packages/keras/callbacks.py:346: RuntimeWarning: Early stopping requires val_loss available!
+  (self.monitor), RuntimeWarning)
+dev:0.010494,1.000000
+val:0.493905,0.854358
+--------------------------------------------------------------------------------
+第1个验证
+dev:0.011855,0.999855
+val:0.395472,0.862713
+k折验证结果：[0.85435779816513757, 0.86271279559300407]
+验证中训练数据结果：[1.0, 0.99985549132947982]
+验证中测试数据平均准确率：0.862713
+测试结果汇总：[0.85435779816513757, 0.86271279559300407, 0.86271279559300407]
+[1.0, 0.99985549132947982],[0.85435779816513757, 0.86271279559300407]
+--------------------------------------------------------------------------------
+
+Process finished with exit code 0
+

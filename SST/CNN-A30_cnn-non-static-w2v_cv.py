@@ -3,8 +3,8 @@
     Author:  'jdwang'
     Date:    'create date: 2016-08-01'
     Email:   '383287471@qq.com'
-    Describe: 单卷积层的 CNN（static-w2v）
-                模型编号： CNN_A20,
+    Describe: 单卷积层的 CNN（non-static-w2v）,
+                模型编号： CNN_A30,
                 具体参考 /dataset/模型汇总.xlsx,
                 结果见：/MR/result/MR_CNN-A00_cnn-w2v_cv.xls
         1. 读取数据 MR数据集
@@ -17,33 +17,51 @@ option = 'output_cv_result'
 
 # endregion -------------- 0、参数设置 ---------------
 
-
 # region 1、加载数据集
 from dataset.data_util import DataUtil
+import numpy as np
 
+data_version = 'SST-1'
 data_util = DataUtil()
-train_data = data_util.get_train_test_data(version='MR')
+data = data_util.get_train_test_data(version=data_version)
+# 分为 train 、test 、dev 集
+train_data = data.loc[data['SPLITSET_LABEL'] == 1]
+dev_data = data[data['SPLITSET_LABEL'] == 2]
+test_data = data[data['SPLITSET_LABEL'] == 3]
 
 train_x = train_data['TEXT'].as_matrix()
 train_y = train_data['LABEL'].as_matrix()
+test_x = test_data['TEXT'].as_matrix()
+test_y = test_data['LABEL'].as_matrix()
+dev_x = dev_data['TEXT'].as_matrix()
+dev_y = dev_data['LABEL'].as_matrix()
+print('train个数：%s, test个数：%s, dev个数:%s' % (train_data.shape[0], test_data.shape[0], dev_data.shape[0]))
+cv_data = [
+    (0, np.concatenate((train_x, dev_x)), np.concatenate((train_y, dev_y)), test_x, test_y),
+    (1, train_x, train_y, dev_x, dev_y),
+]
+
 # endregion
 
 # region 2、交叉验证
 if option == 'cv':
     from deep_learning.cnn.wordEmbedding_cnn.example.one_conv_layer_wordEmbedding_cnn import WordEmbeddingCNNWithOneConv
 
-    input_length = 64
+    # 句子最长长度为：53 ,
+    # 句子最短长度为：1
+    # 句子平均长度为：18
+    input_length = 61
     word_embedding_dim = 300
     WordEmbeddingCNNWithOneConv.cross_validation(
-        train_data=(train_x, train_y),
-        test_data=(train_x, train_y),
-        include_train_data=False,
+        # train_data=(train_x, train_y),
+        # test_data=(train_x, train_y),
+        cv_data=cv_data,
         need_validation=True,
         vocabulary_including_test_set=True,
-        embedding_weight_trainable=False,
         rand_weight=False,
-        cv=10,
-        num_labels=2,
+        embedding_weight_trainable=True,
+        cv=1,
+        num_labels=2 if data_version == 'SST-2' else 5,
         need_segmented=False,
         nb_batch=50,
         input_length=input_length,
@@ -56,12 +74,11 @@ if option == 'cv':
 
 
 # region -------------- 3、提取出验证结果的数据 -------------
-if option == 'output_cv_result':
+if option=='output_cv_result':
     from dataset.data_util import output_validation_result
-
     output_validation_result(
-        path='/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_CNN-A20_cnn-static-w2v_cv.txt',
+        path='/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_CNN-A30_cnn-non-static-w2v_cv.txt',
         version='CNN-A00',
-        step=2
+        step=3
     )
 # endregion -------------- 3、提取出验证结果的数据 ---------------
