@@ -43,6 +43,7 @@ cv_data = [
 # region 2、交叉验证
 if option == 'cv':
     from deep_learning.cnn.wordEmbedding_cnn.example.one_conv_layer_wordEmbedding_cnn import WordEmbeddingCNNWithOneConv
+
     # 句子最长长度为：38
     # 句子最短长度为：3
     # 句子平均长度为：11
@@ -65,7 +66,7 @@ if option == 'cv':
         input_length=input_length,
         num_filter_list=[100],
         # num_filter_list=[10,30,50, 80, 100, 110, 150, 200, 300,500,1000],
-        verbose=1,
+        verbose=2,
     )
 # endregion
 

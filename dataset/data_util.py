@@ -33,7 +33,7 @@ class DataUtil(object):
         string : str
         """
 
-        if version in ['MR','TREC','Subj']:
+        if version in ['MR','TREC','Subj','AG_news']:
             # 过滤字符，只保留 字母 数字 ( ) , ! ? ' `
             string = re.sub(r'[^A-Za-z0-9(),!?\'`]', ' ', string)
             # 将所有is/was等的缩写 's 在前面增加一个空格
@@ -361,6 +361,22 @@ class DataUtil(object):
 
         return data
 
+    def get_ag_news(self):
+        train_data_file_path = self.project_file + 'dataset/11-AG_news/train.csv'
+        test_data_file_path = self.project_file + 'dataset/11-AG_news/test.csv'
+
+        train_data = self.load_data(train_data_file_path, load_type='csv',header=None,sep=',')
+        test_data = self.load_data(test_data_file_path, load_type='csv',header=None,sep=',')
+        train_data.columns=['LABEL','TOPIC','TEXT']
+        test_data.columns=['LABEL','TOPIC','TEXT']
+        train_data['TEXT'] = train_data['TEXT'].apply(lambda x: self.clean_str(x, version='AG_news'))
+        train_data['SPLITSET_LABEL'] = 1
+        test_data['TEXT'] = test_data['TEXT'].apply(lambda x: self.clean_str(x, version='AG_news'))
+        test_data['SPLITSET_LABEL']  = 2
+        data = pd.concat((train_data,test_data),axis=0)
+
+        return data
+
     def get_train_test_data(self, version='MR'):
         """
 
@@ -372,6 +388,7 @@ class DataUtil(object):
             - SST-2： Same as SST-1 but with neutral reviews removed and binary labels,0 or 1，
                       9613 samples, train/test/dev = 6920 / 872/ 1821
             - TREC :
+            - AG_news :
         Returns
         -------
 
@@ -387,6 +404,8 @@ class DataUtil(object):
             return self.get_trec_dataset()
         if version == 'Subj':
             return self.get_subj_dataset()
+        if version == 'AG_news':
+            return self.get_ag_news()
         else:
             raise NotImplementedError
 
@@ -427,7 +446,7 @@ def output_validation_result(path, version='CNN-A00', step=1):
 
 if __name__ == '__main__':
     dutil = DataUtil()
-    dutil.get_train_test_data(version='Subj')
+    dutil.get_train_test_data(version='AG_news')
 
 
     # output_validation_result('/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_cnn-static-w2v_cv.txt',version='CNN-A00',step=1)
