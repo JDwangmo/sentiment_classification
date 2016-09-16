@@ -12,8 +12,8 @@
 """
 
 # region -------------- 0、参数设置 -------------
-option = 'cv'
-# option = 'output_cv_result'
+# option = 'cv'
+option = 'output_cv_result'
 
 # endregion -------------- 0、参数设置 ---------------
 
@@ -50,7 +50,8 @@ if option == 'cv':
         cv=10,
         num_labels=2,
         need_segmented=False,
-        nb_batch=50,
+        batch_size=50,
+        lr=8e-3,
         input_length=input_length,
         num_filter_list=[100],
         # num_filter_list=[10,30,50, 80, 100, 110, 150, 200, 300,500,1000],
@@ -64,8 +65,8 @@ if option == 'output_cv_result':
     from dataset.data_util import output_validation_result
 
     output_validation_result(
-        path='/home/jdwang/PycharmProjects/sentiment_classification/MR/result/MR_CNN-A10_cnn-rand_cv.txt',
+        path='/home/jdwang/PycharmProjects/sentiment_classification/Subj/result/Subj_CNN-A10_cnn-rand_cv.txt',
         version='CNN-A00',
-        step=2
+        step=4
     )
 # endregion -------------- 3、提取出验证结果的数据 ---------------

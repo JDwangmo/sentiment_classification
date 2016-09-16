@@ -1,0 +1,115 @@
+/usr/bin/python2.7 /home/jdwang/PycharmProjects/sentiment_classification/Subj/CNN-A10_cnn-rand-w2v_cv.py
+The version of data set is : Subj
+================================================================================
+feature_type:word,need_segmented:False,vocabulary_including_test_set:True
+rand_weight:True,embedding_weight_trainable:True
+========================================
+if option == 'cv':
+    from deep_learning.cnn.wordEmbedding_cnn.example.one_conv_layer_wordEmbedding_cnn import WordEmbeddingCNNWithOneConv
+    # 句子最长长度为：120
+    input_length = 128
+    word_embedding_dim = 300
+    WordEmbeddingCNNWithOneConv.cross_validation(
+        train_data=(train_x, train_y),
+        test_data=(train_x, train_y),
+        include_train_data=False,
+        need_validation=True,
+        vocabulary_including_test_set=True,
+        # 设置权重随机化
+        rand_weight=True,
+        # 设置权重可训练
+        embedding_weight_trainable=True,
+        cv=10,
+        num_labels=2,
+        need_segmented=False,
+        batch_size=50,
+        lr=8e-3,
+        input_length=input_length,
+        num_filter_list=[100],
+        verbose=1,
+    )
+========================================
+static_w2v_cnn = WordEmbeddingCNN(
+            rand_seed=1377,
+            verbose=kwargs.get('verbose', 0),
+            feature_encoder=feature_encoder,
+            # optimizers='adadelta',
+            optimizers='sgd',
+            # 当使用CNN (rand) 模式的时候使用到了
+            word_embedding_dim=300,
+            # 设置embedding使用训练好的w2v模型初始化
+            embedding_init_weight=weight,
+            # 默认设置为训练时embedding层权重不变
+            embedding_weight_trainable=kwargs.get('embedding_weight_trainable', False),
+            num_labels=num_labels,
+            l1_conv_filter_type=[
+                [num_filter, 3, -1, 'valid', (-1, 1), 0.5, 'relu', 'none'],
+                [num_filter, 4, -1, 'valid', (-1, 1), 0., 'relu', 'none'],
+                [num_filter, 5, -1, 'valid', (-1, 1), 0., 'relu', 'none'],
+            ],
+            l2_conv_filter_type=[],
+            full_connected_layer_units=[],
+            embedding_dropout_rate=0.,
+            nb_epoch=kwargs.get('nb_epoch',25),
+            batch_size=kwargs.get('batch_size',32),
+            earlyStoping_patience=30,
+            lr=kwargs.get('lr',1e-2),
+            show_validate_accuracy=True if kwargs.get('verbose', 0) > 0 else False,
+            # output_regularizer=('l2', 0.5),
+            output_constraints=('maxnorm', 3),
+        )
+================================================================================
+========================================
+num_filter is 100.
+K折交叉验证开始...
+--------------------------------------------------------------------------------
+第1个验证
+Using Theano backend.
+/usr/local/lib/python2.7/dist-packages/keras/callbacks.py:346: RuntimeWarning: Early stopping requires val_loss available!
+  (self.monitor), RuntimeWarning)
+dev:0.068576,0.990111
+val:0.216280,0.912000
+--------------------------------------------------------------------------------
+第2个验证
+dev:0.064471,0.991111
+val:0.257091,0.892000
+--------------------------------------------------------------------------------
+第3个验证
+dev:0.066456,0.991444
+val:0.247045,0.901000
+--------------------------------------------------------------------------------
+第4个验证
+dev:0.068969,0.991222
+val:0.247650,0.896000
+--------------------------------------------------------------------------------
+第5个验证
+dev:0.066977,0.990111
+val:0.286653,0.880000
+--------------------------------------------------------------------------------
+第6个验证
+dev:0.070736,0.989778
+val:0.235379,0.900000
+--------------------------------------------------------------------------------
+第7个验证
+dev:0.087201,0.984889
+val:0.296419,0.881000
+--------------------------------------------------------------------------------
+第8个验证
+dev:0.063472,0.993000
+val:0.276266,0.884000
+--------------------------------------------------------------------------------
+第9个验证
+dev:0.067211,0.991000
+val:0.280012,0.882000
+--------------------------------------------------------------------------------
+第10个验证
+dev:0.065152,0.992111
+val:0.283129,0.886000
+k折验证结果：[0.91200000000000003, 0.89200000000000002, 0.90100000000000002, 0.89600000000000002, 0.88, 0.90000000000000002, 0.88100000000000001, 0.88400000000000001, 0.88200000000000001, 0.88600000000000001]
+验证中训练数据结果：[0.99011111111111116, 0.99111111111111116, 0.99144444444444446, 0.99122222222222223, 0.99011111111111116, 0.98977777777777776, 0.98488888888888892, 0.99299999999999999, 0.99099999999999999, 0.99211111111111117]
+验证中测试数据平均准确率：0.891400
+测试结果汇总：[0.91200000000000003, 0.89200000000000002, 0.90100000000000002, 0.89600000000000002, 0.88, 0.90000000000000002, 0.88100000000000001, 0.88400000000000001, 0.88200000000000001, 0.88600000000000001, 0.89139999999999997]
+[0.99011111111111116, 0.99111111111111116, 0.99144444444444446, 0.99122222222222223, 0.99011111111111116, 0.98977777777777776, 0.98488888888888892, 0.99299999999999999, 0.99099999999999999, 0.99211111111111117],[0.91200000000000003, 0.89200000000000002, 0.90100000000000002, 0.89600000000000002, 0.88, 0.90000000000000002, 0.88100000000000001, 0.88400000000000001, 0.88200000000000001, 0.88600000000000001]
+--------------------------------------------------------------------------------
+
+Process finished with exit code 0

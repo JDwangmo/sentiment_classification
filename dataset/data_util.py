@@ -17,7 +17,7 @@ class DataUtil(object):
         self.project_file = '/home/jdwang/PycharmProjects/sentiment_classification/'
         self.word2vec_model_root_path = '/home/jdwang/PycharmProjects/corprocessor/word2vec/vector/'
 
-    def clean_str(self, string, version='MR',):
+    def clean_str(self, string, version='MR', ):
         """
             处理/清理文本
 
@@ -33,7 +33,7 @@ class DataUtil(object):
         string : str
         """
 
-        if version in ['MR','TREC','Subj','AG_news']:
+        if version in ['MR', 'TREC', 'Subj', 'AG_news']:
             # 过滤字符，只保留 字母 数字 ( ) , ! ? ' `
             string = re.sub(r'[^A-Za-z0-9(),!?\'`]', ' ', string)
             # 将所有is/was等的缩写 's 在前面增加一个空格
@@ -62,7 +62,7 @@ class DataUtil(object):
             # 将两个空白符以上的空白用一个空格替换,比如  'new   conan   and' --> 'new conna and'
             string = re.sub(r"\s{2,}", " ", string)
             # 小写
-            return string.strip().lower() if version!='TREC' else string.strip()
+            return string.strip().lower() if version != 'TREC' else string.strip()
         elif version == 'SST':
             string = string.replace(u'-LRB-', u'(')
             string = string.replace(u'-RRB-', u')')
@@ -92,8 +92,7 @@ class DataUtil(object):
             string = string.replace(u'\xc2', u'')
             string = string.replace(u'Ã ', u'a')
 
-
-            #region 主要处理文件 dictionary.txt 中的符号
+            # region 主要处理文件 dictionary.txt 中的符号
             string = string.replace(u'é', u'e')
             string = string.replace(u'è', u'e')
             string = string.replace(u'ï', u'i')
@@ -282,22 +281,22 @@ class DataUtil(object):
         texts = texts[['sentence_index', 'TEXT', 'LABEL']]
         texts['SPLITSET_LABEL'] = dataset_split['splitset_label']
         # print(texts[texts['LABEL'].isnull()])
-        if version=='SST-1':
+        if version == 'SST-1':
             # 五分类，fine,0-4
             # for very negative, negative, neutral, positive, very positive, respectively.
             # 11855 samples totally
             # 不用进进行任何操作
             pass
-        elif version=='SST-2':
+        elif version == 'SST-2':
             # 去除 中性 的标签（2）的数据
             # Same as SST-1 but with neutral reviews removed and binary labels,0 or 1
             # 9613 samples totally
-            texts = texts[texts['LABEL']!=2]
+            texts = texts[texts['LABEL'] != 2]
             # negative=0 , positive=1
             # texts.to_csv('/home/jdwang/PycharmProjects/sentiment_classification/SST/result/temp.csv',
             #              sep='\t',
             #              encoding='utf8')
-            texts['LABEL'] = texts['LABEL'].apply(lambda x: int(x>2))
+            texts['LABEL'] = texts['LABEL'].apply(lambda x: int(x > 2))
         else:
             raise NotImplementedError
         return texts
@@ -306,36 +305,36 @@ class DataUtil(object):
         train_data_file_path = self.project_file + 'dataset/3-TREC/train_5452.label.txt'
         test_data_file_path = self.project_file + 'dataset/3-TREC/test_500.label.txt'
 
-        train_data = self.load_data(train_data_file_path,load_type='txt')
-        test_data = self.load_data(test_data_file_path,load_type='txt')
+        train_data = self.load_data(train_data_file_path, load_type='txt')
+        test_data = self.load_data(test_data_file_path, load_type='txt')
 
-        train_x=[]
-        train_y=[]
+        train_x = []
+        train_y = []
         for item in train_data:
             items = item.split(':')
             train_y.append(items[0])
             train_x.append(':'.join(items[1:]))
 
-        test_x=[]
-        test_y=[]
+        test_x = []
+        test_y = []
         for item in test_data:
             items = item.split(':')
             test_y.append(items[0])
             test_x.append(':'.join(items[1:]))
 
         texts = train_x + test_x
-        texts = map(lambda x: self.clean_str(x,version='TREC'),texts)
-        labels = train_y+test_y
+        texts = map(lambda x: self.clean_str(x, version='TREC'), texts)
+        labels = train_y + test_y
 
-        splitset_label = [1]*len(train_x)+[2]*len(test_x)
+        splitset_label = [1] * len(train_x) + [2] * len(test_x)
         data = pd.DataFrame(
             data={
-                'TEXT':texts,
-                'LABEL':labels,
-                'SPLITSET_LABEL':splitset_label,
+                'TEXT': texts,
+                'LABEL': labels,
+                'SPLITSET_LABEL': splitset_label,
             }
         )
-        labels_to_index = {'ABBR':0,'ENTY':1, 'DESC':2,'HUM':3,'LOC':4,'NUM':5}
+        labels_to_index = {'ABBR': 0, 'ENTY': 1, 'DESC': 2, 'HUM': 3, 'LOC': 4, 'NUM': 5}
         data['LABEL'] = data['LABEL'].map(labels_to_index)
 
         return data
@@ -365,15 +364,15 @@ class DataUtil(object):
         train_data_file_path = self.project_file + 'dataset/11-AG_news/train.csv'
         test_data_file_path = self.project_file + 'dataset/11-AG_news/test.csv'
 
-        train_data = self.load_data(train_data_file_path, load_type='csv',header=None,sep=',')
-        test_data = self.load_data(test_data_file_path, load_type='csv',header=None,sep=',')
-        train_data.columns=['LABEL','TOPIC','TEXT']
-        test_data.columns=['LABEL','TOPIC','TEXT']
+        train_data = self.load_data(train_data_file_path, load_type='csv', header=None, sep=',')
+        test_data = self.load_data(test_data_file_path, load_type='csv', header=None, sep=',')
+        train_data.columns = ['LABEL', 'TOPIC', 'TEXT']
+        test_data.columns = ['LABEL', 'TOPIC', 'TEXT']
         train_data['TEXT'] = train_data['TEXT'].apply(lambda x: self.clean_str(x, version='AG_news'))
         train_data['SPLITSET_LABEL'] = 1
         test_data['TEXT'] = test_data['TEXT'].apply(lambda x: self.clean_str(x, version='AG_news'))
-        test_data['SPLITSET_LABEL']  = 2
-        data = pd.concat((train_data,test_data),axis=0)
+        test_data['SPLITSET_LABEL'] = 2
+        data = pd.concat((train_data, test_data), axis=0)
 
         return data
 
@@ -428,20 +427,30 @@ def output_validation_result(path, version='CNN-A00', step=1):
     """
 
     with open(path, 'r') as fout:
+        train = []
+        test = []
         for line in fout:
             line = line.strip()
             if version == 'CNN-A00':
-                if step == 1:
+                if step in [1]:
                     if line.startswith('num_filter is '):
                         print(line.replace('num_filter is ', '').replace('.', ''))
-                if step == 2:
+                if step in [2, 4]:
                     if line.startswith('测试结果汇总：'):
-                        print(line.replace('测试结果汇总：[', '').replace(']', ''))
-                if step == 3:
+                        line = line.replace('测试结果汇总：[', '').replace(']', '')
+                        print(line)
+                        test.append(line)
+                if step in [3, 4]:
                     if line.startswith('验证中训练数据结果：'):
-                        print(line.replace('验证中训练数据结果：[', '').replace(']', ''))
+                        line = line.replace('验证中训练数据结果：[', '').replace(']', '')
+                        print(line)
+                        train.append(line)
             else:
                 raise NotImplementedError
+
+        if step == 4:
+            for tr, te in zip(train, test):
+                print(',,'.join(['%s,,%s' % (i, j) for i, j in zip(tr.split(',')+[' '], te.split(','))]))
 
 
 if __name__ == '__main__':
