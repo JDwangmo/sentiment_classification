@@ -17,6 +17,11 @@ http://neuro.imm.dtu.dk/wiki/Sentiment_analysis: The more detailed information o
 
 ![Related Papers](https://raw.githubusercontent.com/JDwangmo/sentiment_classification/master/dataset/related_papers.png "Related Papers")
 
+
+### Project Structure
+> [dataset](https://github.com/JDwangmo/sentiment_classification/dataset) : 数据集
+> [Experiment](https://github.com/JDwangmo/sentiment_classification/Experiment) : 实验
+
 ### Requirements
 > Python 2.7
 > Numpy
