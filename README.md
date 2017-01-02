@@ -23,10 +23,10 @@ http://neuro.imm.dtu.dk/wiki/Sentiment_analysis: The more detailed information o
 > [Experiment](https://github.com/JDwangmo/sentiment_classification/Experiment) : 实验
 
 ### Requirements
-> Python 2.7
-> Numpy
-> Theano
-> Keras
-> pandas
-> nltk
-> Pattern: Pattern is a web mining module for the Python programming language.It has tools for data mining (Google, Twitter and Wikipedia API, a web crawler, a HTML DOM parser), natural language processing (part-of-speech taggers, n-gram search, sentiment analysis, WordNet), machine learning (vector space model, clustering, SVM), network analysis and <canvas> visualization.
+> - Python 2.7
+> - Numpy
+> - Theano
+> - Keras
+> - pandas
+> - nltk
+> - Pattern: Pattern is a web mining module for the Python programming language.It has tools for data mining (Google, Twitter and Wikipedia API, a web crawler, a HTML DOM parser), natural language processing (part-of-speech taggers, n-gram search, sentiment analysis, WordNet), machine learning (vector space model, clustering, SVM), network analysis and <canvas> visualization.
