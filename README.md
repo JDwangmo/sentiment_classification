@@ -5,7 +5,7 @@ This repository is about tasks on English text sentiment analysis or topic categ
 ###### See also
 http://neuro.imm.dtu.dk/wiki/Sentiment_analysis: The more detailed information of sentiment analysis can be learned from here, including concepts, data set,affective word lists, related papers... 
 
-### [Data Detail](https://github.com/JDwangmo/sentiment_classification/tree/master/dataset/公开数据集.xlsx)
+### [Data Detail](https://github.com/JDwangmo/sentiment_classification/tree/master/dataset)
 
 ![Data Detail](https://raw.githubusercontent.com/JDwangmo/sentiment_classification/master/dataset/dataset_detail.png "Data Detail")
 
