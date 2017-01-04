@@ -2,9 +2,10 @@
 # encoding=utf8
 """
     Author:  'jdwang'
-    Date:    'create date: 从 http://compprag.christopherpotts.net/直接导入'; 'last updated date: 2017-01-03'
+    Date:    'create date: 从 http://compprag.christopherpotts.net/swda.html 直接导入'; 'last updated date: 2017-01-03'
     Email:   '383287471@qq.com'
-    Describe: 在原有程序 进行了 1个 局部小修正，以保证程序正确运行
+    Describe: SwDA数据集的一些操作类定义，在原有程序 进行了 1个 局部小修正，以保证程序正确运行
+
 原有描述：
 Classes for dealing with the CSV version of the Switchboard Dialog Act
 corpus that was distributed as part of this course:
