@@ -246,7 +246,10 @@ class Utterance:
                 if row_value:
                     # 原本代码有误，这里进行局部修正，以使得程序正确运行
                     # row_value = map(Tree, row_value.split("|||"))
-                    row_value = map(lambda x: Tree(x, []), row_value.split("|||"))
+                    # 修正1
+                    # row_value = map(lambda x: Tree(x, []), row_value.split("|||"))
+                    # 修正2  ---- > 可以正确将 ptb字符串转为 nltk.Tree
+                    row_value = map(Tree.fromstring,row_value.split("|||"))
 
                 else:
                     row_value = []
@@ -457,6 +460,12 @@ class Utterance:
 ######################################################################
 
 if __name__ == '__main__':
-    trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
-    pass
+    # test Transcript class
+    # trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
+    # test CorpusReader class
+    corpus = CorpusReader('swda')
 
+    # Iterate through the transcripts; display_progress=True tracks progress:
+    for trans in corpus.iter_transcripts(display_progress=True):
+        len(trans.utterances)
+        pass
