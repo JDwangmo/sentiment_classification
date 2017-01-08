@@ -460,13 +460,56 @@ class Utterance:
 
 
 ######################################################################
+def tag_set_count(option=0):
+    """
+    统计 SwDA数据即 的标签分布情况，有两个版本的标签，通过option设置
+        0 - simple, 简化版 - 43个
+        1 - all,    完整版 - 217个
+
+    Parameters
+    ----------
+    option: int
+
+    Returns
+    -------
+
+    """
+    corpus = CorpusReader('swda')
+    from collections import defaultdict
+
+    d = defaultdict(int)
+    # Loop, counting tags:
+    for utt in corpus.iter_utterances(display_progress=True):
+        if option==1:
+            d[utt.act_tag] += 1
+            if utt.act_tag == '+':
+                pass
+        else:
+            d[utt.damsl_act_tag()] += 1
+    print('标签数： %d'%len(d))
+    # Print the results sorted by count, largest to smallest:
+    for key, val in sorted(d.items(), key=lambda x: x[1], reverse=True):
+        print key, val
+
+
+######################################################################
+
 
 if __name__ == '__main__':
     # 1 - test Transcript class
     # trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
 
     # 2 - test CorpusReader class
-    corpus = CorpusReader('swda')
+    # corpus = CorpusReader('swda')
     # Iterate through the transcripts; display_progress=True tracks progress:
-    for trans in corpus.iter_transcripts(display_progress=True):
-        print(len(trans.utterances))
+    # count =0
+    # for trans in corpus.iter_transcripts(display_progress=True):
+    #     count +=len(trans.utterances)
+    #
+    # print(count)
+
+    # 3 - 统计
+    # 简化版 - 43
+    # tag_set_count(0)
+    # 完整版 - 217
+    tag_set_count(1)
