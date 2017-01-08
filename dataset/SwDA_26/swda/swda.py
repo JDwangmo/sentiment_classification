@@ -2,7 +2,8 @@
 # encoding=utf8
 """
     Author:  'jdwang'
-    Date:    'create date: 从 http://compprag.christopherpotts.net/swda.html 直接导入'; 'last updated date: 2017-01-03'
+    Date:    'create date: 2017-01-03 从 http://compprag.christopherpotts.net/swda.html 直接导入';
+             'last updated date: 2017-01-03'
     Email:   '383287471@qq.com'
     Describe: SwDA数据集的一些操作类定义，在原有程序 进行了 1个 局部小修正，以保证程序正确运行
 
@@ -144,7 +145,8 @@ class CorpusReader:
         # Closing blank line for the progress bar:
         if display_progress: sys.stderr.write("\n")
 
-        ######################################################################
+
+######################################################################
 
 
 class Transcript:
@@ -249,7 +251,7 @@ class Utterance:
                     # 修正1
                     # row_value = map(lambda x: Tree(x, []), row_value.split("|||"))
                     # 修正2  ---- > 可以正确将 ptb字符串转为 nltk.Tree
-                    row_value = map(Tree.fromstring,row_value.split("|||"))
+                    row_value = map(Tree.fromstring, row_value.split("|||"))
 
                 else:
                     row_value = []
@@ -460,12 +462,11 @@ class Utterance:
 ######################################################################
 
 if __name__ == '__main__':
-    # test Transcript class
+    # 1 - test Transcript class
     # trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
-    # test CorpusReader class
-    corpus = CorpusReader('swda')
 
+    # 2 - test CorpusReader class
+    corpus = CorpusReader('swda')
     # Iterate through the transcripts; display_progress=True tracks progress:
     for trans in corpus.iter_transcripts(display_progress=True):
-        len(trans.utterances)
-        pass
+        print(len(trans.utterances))
