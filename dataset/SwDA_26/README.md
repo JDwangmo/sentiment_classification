@@ -12,6 +12,9 @@
 
 - swb1_dialogact_annot 数据集 数据解析,以下提到的解析在 swda.zip数据集中基本都已经做好了
     - 数据的详细描述：[Coders' Manual](http://web.stanford.edu/~jurafsky/ws97/manual.august1.html)
+        - `pdf版本`: `SwDA_26/WS-97 Switchboard DAMSL Coders Manual.pdf`
+        - [本地地址 - evernote](https://app.yinxiang.com/shard/s8/nl/1386165/85f5c32a-599b-4d0b-a411-7cdddac58695)
+        
     - 每个文件对应一段对话，比如 sw_0001_4325.utt.csv 就对应一段对话，每个文件一开始提供了一些信息，比如对话的时间，如sw_0001_4325.utt.csv中：
         - FILENAME:	4325_1632_1519   ------>   文件名
         - TOPIC#:	323              ------>   主题
