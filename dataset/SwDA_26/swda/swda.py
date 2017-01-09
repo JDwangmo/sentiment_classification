@@ -497,7 +497,10 @@ def tag_set_count(option=0):
 
 if __name__ == '__main__':
     # 1 - test Transcript class
-    # trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
+    trans = Transcript('swda/sw00utt/sw_0001_4325.utt.csv', 'swda/swda-metadata.csv')
+    utt = trans.utterances[53]
+    print(utt.text)
+    print(utt.pos)
 
     # 2 - test CorpusReader class
     # corpus = CorpusReader('swda')
@@ -512,4 +515,5 @@ if __name__ == '__main__':
     # 简化版 - 43
     # tag_set_count(0)
     # 完整版 - 217
-    tag_set_count(1)
+    # tag_set_count(1)
+
