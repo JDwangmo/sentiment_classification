@@ -96,3 +96,6 @@ ENV/
 *.tar.gz
 
 #-*.utf8
+
+# add by WJD in 20170406
+Temp
