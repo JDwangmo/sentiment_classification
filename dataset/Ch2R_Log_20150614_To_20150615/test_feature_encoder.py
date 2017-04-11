@@ -9,13 +9,14 @@ from __future__ import print_function
 from configure import Data_File_Path, Temp_Root_Path
 from feature_encoder import FeatureEncoder
 from sklearn.ensemble.forest import RandomForestClassifier
-from data_util import read_id_sentences, get_k_fold_train_test_data, split_train_test_data, write_dataframe_to_csv_file
+from data_util import read_id_sentences, get_k_fold_train_test_data, split_train_test_data, write_dataframe_to_csv_file,read_ood_sentences
 from data_processing_util.evaluate import get_evaluate_score
 import numpy as np
 
 __version__ = '1.0'
 
 if __name__ == '__main__':
+
     # 读取 ID 句子
     id_sentences = read_id_sentences(
         remove_redundant=True,

@@ -29,4 +29,15 @@ if not path.exists(Data_File_Path):
 if not path.exists(Temp_Root_Path):
     os.makedirs(Temp_Root_Path)
 
+Verbose = 0
 Option = 'rf_classifier'
+# ood
+# id
+# id_ood : ID 加上 OOD 混合模型
+Data_Type = 'id'
+# boc_rule
+# bow_rule
+# boc
+# bow
+# rule
+Feature_Type = 'boc_rule'

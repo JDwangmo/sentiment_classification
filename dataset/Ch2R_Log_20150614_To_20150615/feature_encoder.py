@@ -12,7 +12,9 @@ from configure import Temp_Root_Path
 from os import path
 import re
 import codecs
+from data_processing_util.feature_encoder.bow_feature_encoder import FeatureEncoder as Bow_FeatureEncoder
 from data_processing_util.jiebanlp.jieba_util import Jieba_Util
+
 __version__ = '1.0'
 
 
@@ -23,15 +25,30 @@ class FeatureEncoder(object):
         
     """
 
-    def __init__(self, temp_root_path=Temp_Root_Path):
+    def __init__(self,
+                 feature_type='bow_rule',
+                 index_to_label_name=None,
+                 temp_root_path=Temp_Root_Path,
+                 verbose=0
+                 ):
         """
         初始化各种规则
 
         Parameters
         ----------
+        feature_type : str
+            特征类型: [ 'bow', 'rule', 'bow_rule' ]
+                - bow /boc: BOW/BOC 特征
+                - rule: 语法语义特征
+                - bow_rule/ boc_rule: BOW / BOC 特征 + 语法语义特征
         temp_root_path : str
             缓存文件夹
+        verbose : int
+            数值越大,内容越详细
         """
+        # 特征类型
+        self.feature_type = feature_type
+        self.verbose = verbose
 
         # 缓存文件夹
         self.temp_root_path = temp_root_path
@@ -49,16 +66,21 @@ class FeatureEncoder(object):
         # 属性值列表
         self.attribute_name_count_dict = {}
         # index_to_label_name
-        self.index_to_label_name = [u'陈述句',
-                                    u'特指问',
-                                    u'是非问',
-                                    u'正反问',
-                                    u'选择问',
-                                    ]
+        if index_to_label_name is None:
+            self.index_to_label_name = [u'陈述句',
+                                        u'特指问',
+                                        u'是非问',
+                                        u'正反问',
+                                        u'选择问',
+                                        ]
+        else:
+            self.index_to_label_name = index_to_label_name
         # label_name_to_index
         self.label_name_to_index = {v: k for k, v in enumerate(self.index_to_label_name)}
 
-        self.jieba_util = Jieba_Util()
+        self.jieba_util = Jieba_Util(verbose=verbose)
+
+        self.feature_encoder = None
 
     def fit(self, train_data):
         """
@@ -74,9 +96,10 @@ class FeatureEncoder(object):
 
         """
         # print(train_data.describe())
-        # region 1 句型模式的分布情况
-        print('句型模式的分布情况')
-        print(train_data['Label'].value_counts())
+        # region 1 类别的分布情况
+        if self.verbose > 0:
+            print('类别的分布情况')
+            print(train_data['Label'].value_counts())
         # endregion
         # region 2 定义各种句型模式 语法规则
         # region 这些规则是 陈述句 的句型模式正则 - 匹配上就是0 - 4个特征
@@ -165,113 +188,136 @@ class FeatureEncoder(object):
 
         # endregion
         # endregion
+
+        self.feature_encoder = Bow_FeatureEncoder(
+            verbose=0,
+            need_segmented=True,
+            full_mode=False,
+            replace_number=True,
+            remove_stopword=True,
+            lowercase=True,
+            feature_type='seg' if self.feature_type in ['bow', 'bow_rule'] else 'word',
+            zhs2zht=True,
+            remove_url=True,
+            feature_method='bow',
+            max_features=2000,
+            word2vec_to_solve_oov=False,
+        )
+        self.feature_encoder.fit(
+            train_data=train_data['Sentence'].as_matrix()
+        )
+
         return self
 
     def get_features(self, item):
-        sentence, semantic_info = item
-        # 取最后一句,比如:
-        # "之前那个吗？　我说得是RAM容量"
-        # 句型模式就根据后面那句判断就好
-        sentence = self.jieba_util.cut_sentence(sentence)[-1]
         features = []
-        # print(sentence)
-        # region 语法特征 - 19个
-        # region 陈述句 - 4个
-        for rule in self.declarative_sentence_rules:
-            re_result = re.search(rule, sentence)
-            if re_result:
-                # print(re_result.group())
-                features.append(0)
-            else:
-                # 不匹配上为 1
-                features.append(1)
-        # endregion
-        # region 特指问 - 5个
-        for rule in self.definite_question_rules:
-            re_result = re.search(rule, sentence)
-            if re_result:
-                # 匹配上为 1
-                # print(re_result.group())
-                features.append(1)
-            else:
-                features.append(0)
-        # endregion
-        # region 选择问 - 3个
-        # 3个 语法特征
-        for rule in self.select_question_rules:
-            re_result = re.search(rule, sentence)
-            if re_result:
-                # 匹配上为 1
-                # print(re_result.group())
-                features.append(1)
-            else:
-                features.append(0)
 
+        sentence, semantic_info = item
+        # region BOW 特征
+        if self.feature_type in ['bow', 'boc', 'bow_rule', 'boc_rule']:
+            features += self.feature_encoder.transform_sentence(sentence).tolist()
         # endregion
-        # region 是非问 - 3个
-        for rule in self.yes_or_no_question_rules:
-            re_result = re.search(rule, sentence)
-            if re_result:
-                # 匹配上为 1
-                # print(re_result.group())
-                features.append(1)
-            else:
-                features.append(0)
+        # region 语义语义特征
+        if self.feature_type in ['rule', 'bow_rule', 'boc_rule']:
+            # 取最后一句,比如:
+            # "之前那个吗？　我说得是RAM容量"
+            # 句型模式就根据后面那句判断就好
+            sentence = self.jieba_util.cut_sentence(sentence)[-1]
+            # print(sentence)
+            # region 语法特征 - 19个
+            # region 陈述句 - 4个
+            for rule in self.declarative_sentence_rules:
+                re_result = re.search(rule, sentence)
+                if re_result:
+                    # print(re_result.group())
+                    features.append(0)
+                else:
+                    # 不匹配上为 1
+                    features.append(1)
+            # endregion
+            # region 特指问 - 5个
+            for rule in self.definite_question_rules:
+                re_result = re.search(rule, sentence)
+                if re_result:
+                    # 匹配上为 1
+                    # print(re_result.group())
+                    features.append(1)
+                else:
+                    features.append(0)
+            # endregion
+            # region 选择问 - 3个
+            # 3个 语法特征
+            for rule in self.select_question_rules:
+                re_result = re.search(rule, sentence)
+                if re_result:
+                    # 匹配上为 1
+                    # print(re_result.group())
+                    features.append(1)
+                else:
+                    features.append(0)
 
-        # endregion
-        # region 正反问 - 4个
-        for rule in self.positive_or_negative_question_rules:
-            re_result = re.search(rule, sentence)
-            if re_result:
-                # 匹配上为 1
-                # print(re_result.group())
-                features.append(1)
-            else:
-                features.append(0)
-        # endregion
-        # endregion
-        # region 语义特征 - 2个 - 是否有 值未定 的属性; 属性值最大是否>=2
-        has_value = True
-        # 出现过的最大属性值个数
-        attribute_value_max_count = 0
-        for info_block in semantic_info.split(u';'):
-            # 品牌:【努比亚】;型号:【X6】
-            info_block = info_block.strip()
-            if len(info_block) == 0:
-                # 空,跳过
-                continue
-            # 主屏尺寸:【5,2147483647】【5,2147483647】
-            temps = re.split(u'[：:]', info_block)
-            try:
-                attribute_name = temps[0].strip()
-                # print(attribute_name)
-                self.attribute_name_count_dict[attribute_name] = self.attribute_name_count_dict.get(attribute_name,
-                                                                                                    0) + 1
-                if attribute_name == u'':
-                    pass
-                if len(temps) == 1:
-                    # 说明 只有属性名
-                    # 进入这里是因为 标注的问题
-                    # 比如:   价格   --> 忘记用 ":" 分割了
-                    has_value = False
-                    break
+            # endregion
+            # region 是非问 - 3个
+            for rule in self.yes_or_no_question_rules:
+                re_result = re.search(rule, sentence)
+                if re_result:
+                    # 匹配上为 1
+                    # print(re_result.group())
+                    features.append(1)
+                else:
+                    features.append(0)
 
-                attribute_value = temps[1].strip()
-                if len(attribute_value) == 0:
-                    # print(sentence)
-                    has_value = False
-                    break
-                # 属性值个数
-                attribute_value_count = max(len(attribute_value.split(u'【')) - 1, 1)
-                # print(attribute_value_count)
-                if attribute_value_count > attribute_value_max_count:
-                    attribute_value_max_count = attribute_value_count
-            except Exception as e:
-                # 居然出现意外?
-                sys.stderr.write(u'%s,%s,%s\n' % (sentence, semantic_info, e))
+            # endregion
+            # region 正反问 - 4个
+            for rule in self.positive_or_negative_question_rules:
+                re_result = re.search(rule, sentence)
+                if re_result:
+                    # 匹配上为 1
+                    # print(re_result.group())
+                    features.append(1)
+                else:
+                    features.append(0)
+            # endregion
+            # endregion
+            # region 语义特征 - 2个 - 是否有 值未定 的属性; 属性值最大是否>=2
+            has_value = False
+            # 出现过的最大属性值个数
+            attribute_value_max_count = 0
+            for info_block in semantic_info.split(u';'):
+                # 品牌:【努比亚】;型号:【X6】
+                info_block = info_block.strip()
+                if len(info_block) == 0:
+                    # 空,跳过
+                    continue
+                # 主屏尺寸:【5,2147483647】【5,2147483647】
+                temps = re.split(u'[：:]', info_block)
+                try:
+                    attribute_name = temps[0].strip()
+                    # print(attribute_name)
+                    self.attribute_name_count_dict[attribute_name] = self.attribute_name_count_dict.get(attribute_name,
+                                                                                                        0) + 1
+                    if len(temps) == 1:
+                        # 说明 只有属性名
+                        # 进入这里是因为 标注的问题
+                        # 比如:   价格   --> 忘记用 ":" 分割了
+                        continue
 
-        features.append(int(has_value))
-        features.append(int(attribute_value_max_count >= 2))
+                    attribute_value = temps[1].strip()
+                    if len(attribute_value) == 0:
+                        # print(sentence)
+                        continue
+                    has_value = True
+                    # 属性值个数
+                    attribute_value_count = max(len(attribute_value.split(u'【')) - 1, 1)
+                    # print(attribute_value_count)
+                    if attribute_value_count > attribute_value_max_count:
+                        attribute_value_max_count = attribute_value_count
+                except Exception as e:
+                    # 居然出现意外?
+                    sys.stderr.write(u'%s,%s,%s\n' % (sentence, semantic_info, e))
+            features.append(int(has_value))
+            features.append(int(attribute_value_max_count >= 2))
+            # endregion
         # endregion
         # print(features)
         # quit()
@@ -292,7 +338,9 @@ class FeatureEncoder(object):
         """
         # print(self.get_features([u'这款手机外观好不好看？', u'外观设计:【好】']))
         # quit()
+
         train_x = np.asarray(map(self.get_features, data[['Sentence', 'Semantic_Info']].values))
+
         train_y = np.asarray(data['Label'].map(self.label_name_to_index))
         # region 缓存文件
         # 输出到缓存文件 - attribute_names.csv
