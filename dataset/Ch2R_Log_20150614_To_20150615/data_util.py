@@ -19,7 +19,7 @@ from configure import Data_Root_Path
 __version__ = '1.0'
 
 
-def read_train_test_data(data_type='id'):
+def read_train_test_data(data_type='id',history_length=0):
     """读取 训练和测试 数据
     
     Parameters
@@ -40,6 +40,7 @@ def read_train_test_data(data_type='id'):
         id_data_train, id_data_test = read_id_sentences(
             remove_redundant=False,
             train_test_split_rate=0.8,
+            history_length=history_length,
             file_path=path.join(Data_Root_Path, 'ID标注-汇总-20170404.csv'),
             rand_seed=13,
         )
@@ -80,8 +81,13 @@ def read_train_test_data(data_type='id'):
     return data_train, data_test, index_to_label_name
 
 
-def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0.8, temp_root_path=Temp_Root_Path,
-                      rand_seed=5):
+def read_id_sentences(file_path,
+                      remove_redundant=False,
+                      train_test_split_rate=0.8,
+                      temp_root_path=Temp_Root_Path,
+                      history_length=0,
+                      rand_seed=5
+                      ):
     """
     - 从文件中获取 ID 样例 
         - 每个样例格式为: [句子ID, ]
@@ -98,6 +104,9 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
         缓存文件夹
     train_test_split_rate: float
         训练和测试集合的切分比率
+    history_length: int
+        历史长度
+            - history_length ==0 时, 将保存当前句的所有历史句
     rand_seed : int
         随机种子
 
@@ -146,7 +155,7 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
         else:
             datas = data_train
             num_of_diaglogues_train += 1
-
+        history_user_sentences = []
         for sentence_index, (session_id,
                              time, name, record, sentence_mode,
                              sentence_mode_remark, semantic_info,
@@ -164,6 +173,7 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
             # region 2.2 - 跳过 OOD 话语 和 Ch2R的话语
             if name == u'Ch2R':
                 num_of_ch2r_sentences += 1
+                history_user_sentences.append(sentence_id)
                 continue
             if sentence_mode.__contains__(u'协处理'):
                 num_of_ood_sentences += 1
@@ -178,17 +188,20 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
             else:
                 if remove_redundant:
                     exited_sentences.add(record + label)
-
+            sentence_id = u'%s-%d' % (session_id, sentence_index)
             datas.append([
                 # 句子 id
-                u'%s-%d' % (session_id, sentence_index),
+                sentence_id,
                 # 标签
                 label,
                 # 句子
                 record,
                 # 语义信息
-                semantic_info
+                semantic_info,
+                # user 历史对话
+                ','.join(history_user_sentences[-history_length:]),
             ])
+            history_user_sentences.append(sentence_id)
 
     sys.stderr.write('其中异常对话: %d\n' % num_of_exception_dialogues)
     sys.stderr.write('去除异常对话后,有: %d\n' % (len(set(log_data['SessionID'])) - num_of_exception_dialogues))
@@ -199,11 +212,11 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
     sys.stderr.write('\tID 话语: %d\n' % num_of_id_sentences)
     data_train = pd.DataFrame(
         data=data_train,
-        columns=[u'Sentence_ID', u'Label', u'Sentence', u'Semantic_Info']
+        columns=[u'Sentence_ID', u'Label', u'Sentence', u'Semantic_Info', u'History_User_Sentences']
     )
     data_test = pd.DataFrame(
         data=data_test,
-        columns=[u'Sentence_ID', u'Label', u'Sentence', u'Semantic_Info']
+        columns=[u'Sentence_ID', u'Label', u'Sentence', u'Semantic_Info', u'History_User_Sentences']
     )
     sys.stderr.write('\ttrain 对话段: %d\n' % num_of_diaglogues_train)
     sys.stderr.write('\ttest 对话段: %d\n' % num_of_diaglogues_test)
@@ -213,7 +226,8 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
 
     # region 保存
     temp_file_path = path.join(temp_root_path,
-                               'id_sentences_train_%s_%dsentences.csv' % (
+                               'id_sentences_HistoryLength%d_%s_train_%dsentences.csv' % (
+                                   history_length,
                                    '去重' if remove_redundant else '未去重',
                                    len(data_train))
                                )
@@ -222,7 +236,8 @@ def read_id_sentences(file_path, remove_redundant=False, train_test_split_rate=0
                                 name='ID Sentences train '
                                 )
     temp_file_path = path.join(temp_root_path,
-                               'id_sentences_test_%s_%dsentences.csv' % (
+                               'id_sentences_HistoryLength%d_%s_test_%dsentences.csv' % (
+                                   history_length,
                                    '去重' if remove_redundant else '未去重',
                                    len(data_test))
                                )
@@ -249,17 +264,21 @@ def read_ood_sentences():
     }
     train_data, test_data = data_util.load_train_test_data(config)
     label_to_index, index_to_label = data_util.get_label_index(version=config['label_version'])
+
     # 转为和 ID数据 一致
     train_data['Sentence'] = train_data['SENTENCE']
     train_data['Label'] = train_data['LABEL']
     train_data['Sentence_ID'] = ['ood-%d' % idx for idx in range(len(train_data))]
     train_data['Semantic_Info'] = ''
-    train_data = train_data[['Sentence_ID', 'Label', 'Sentence', 'Semantic_Info']]
+    train_data['History_User_Sentences'] = ''
+    train_data = train_data[['Sentence_ID', 'Label', 'Sentence', 'Semantic_Info', 'History_User_Sentences']]
+
     test_data['Sentence'] = test_data['SENTENCE']
     test_data['Label'] = test_data['LABEL']
     test_data['Sentence_ID'] = ['ood-%d' % idx for idx in range(len(test_data))]
     test_data['Semantic_Info'] = ''
-    test_data = test_data[['Sentence_ID', 'Label', 'Sentence', 'Semantic_Info']]
+    test_data['History_User_Sentences'] = ''
+    test_data = test_data[['Sentence_ID', 'Label', 'Sentence', 'Semantic_Info', 'History_User_Sentences']]
 
     return train_data, test_data, index_to_label
 

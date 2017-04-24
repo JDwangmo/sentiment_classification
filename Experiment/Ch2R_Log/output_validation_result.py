@@ -7,15 +7,19 @@
 """
 from configure import Data_Type, Feature_Type
 
+data_type, feature_type, History_Length = 'id', 'rule', 0
+classifier = 'LSTM'
 for step in [1, 2, 3, 4]:
     # step = 2
     count = 0
-    with open('result/结果-20170411/%s.rf.%s.cv_result.txt' % (Data_Type, Feature_Type), 'r') as fout:
+    with open('result/结果-20170412//%s_%s_%s_HistoryLength%d_test_result_CV.csv' % (classifier,data_type, feature_type, History_Length), 'r') as fout:
         for line in fout:
             line = line.strip()
             if step == 1:
-                if line.startswith('n_estimators is '):
+                if classifier == 'RF' and line.startswith('n_estimators is '):
                     print(line.replace('n_estimators is ', '').replace('.', ''))
+                if classifier == 'LSTM' and line.startswith('num_filter is '):
+                    print(line.replace('num_filter is ', '').replace('.', ''))
             if step == 2:
                 if line.startswith('测试结果汇总：'):
                     print(line.replace('测试结果汇总：[', '').replace(']', ''))

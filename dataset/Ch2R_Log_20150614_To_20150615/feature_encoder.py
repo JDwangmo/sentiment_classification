@@ -28,6 +28,7 @@ class FeatureEncoder(object):
     def __init__(self,
                  feature_type='bow_rule',
                  index_to_label_name=None,
+                 history_length=0,
                  temp_root_path=Temp_Root_Path,
                  verbose=0
                  ):
@@ -41,6 +42,8 @@ class FeatureEncoder(object):
                 - bow /boc: BOW/BOC 特征
                 - rule: 语法语义特征
                 - bow_rule/ boc_rule: BOW / BOC 特征 + 语法语义特征
+        history_length: int
+            历史长度
         temp_root_path : str
             缓存文件夹
         verbose : int
@@ -48,6 +51,7 @@ class FeatureEncoder(object):
         """
         # 特征类型
         self.feature_type = feature_type
+        self.history_length = history_length
         self.verbose = verbose
 
         # 缓存文件夹
@@ -82,6 +86,8 @@ class FeatureEncoder(object):
 
         self.feature_encoder = None
 
+        self.sentence_to_features_temp_dict = {}
+
     def fit(self, train_data):
         """
         
@@ -95,13 +101,13 @@ class FeatureEncoder(object):
         self: FeatureEncoder
 
         """
+        id_data_train, ood_data_train = train_data
+        # 检查参数
+        if self.history_length > 0 and ood_data_train is not None:
+            raise Exception('OOD数据没办法使用历史上下文,请只是使用 ID数据 或者 history_length设置为0\n')
         # print(train_data.describe())
-        # region 1 类别的分布情况
-        if self.verbose > 0:
-            print('类别的分布情况')
-            print(train_data['Label'].value_counts())
-        # endregion
-        # region 2 定义各种句型模式 语法规则
+
+        # region 1 定义各种句型模式 语法规则
         # region 这些规则是 陈述句 的句型模式正则 - 匹配上就是0 - 4个特征
         self.declarative_sentence_rules = [
             # *** + 吗/呢 + ***
@@ -188,7 +194,7 @@ class FeatureEncoder(object):
 
         # endregion
         # endregion
-
+        # region 2 定义 BOW 特征器 并训练
         self.feature_encoder = Bow_FeatureEncoder(
             verbose=0,
             need_segmented=True,
@@ -203,26 +209,40 @@ class FeatureEncoder(object):
             max_features=2000,
             word2vec_to_solve_oov=False,
         )
+        sentences = []
+        if id_data_train is not None:
+            sentences += [utt.sentence for utt in id_data_train.iter_utterances(data_type='id')]
+        if ood_data_train is not None:
+            sentences += ood_data_train['Sentence'].tolist()
         self.feature_encoder.fit(
-            train_data=train_data['Sentence'].as_matrix()
+            train_data=sentences,
         )
-
+        # endregion
         return self
 
-    def get_features(self, item):
+    def sentence_to_features(self, sentence, semantic_info):
+        """ 单句 特征
+
+        Parameters
+        ----------
+        item: list
+            当前话语
+        data : pd.DataFrame()
+            全部数据
+        Returns
+        -------
+        feature: list
+            特征
+        """
         features = []
 
-        sentence, semantic_info = item
-        # region BOW 特征
-        if self.feature_type in ['bow', 'boc', 'bow_rule', 'boc_rule']:
-            features += self.feature_encoder.transform_sentence(sentence).tolist()
-        # endregion
         # region 语义语义特征
-        if self.feature_type in ['rule', 'bow_rule', 'boc_rule']:
+        if re.search('rule', self.feature_type):
             # 取最后一句,比如:
             # "之前那个吗？　我说得是RAM容量"
             # 句型模式就根据后面那句判断就好
-            sentence = self.jieba_util.cut_sentence(sentence)[-1]
+            # 标点符号的话,英文句号 "." 不作为切割句子的标点符号,因为 很多数字都是这样分割的比如: 5.0寸
+            sentence = self.jieba_util.cut_sentence(sentence, punt_list=u'!?:;~。！？：；～')[-1]
             # print(sentence)
             # region 语法特征 - 19个
             # region 陈述句 - 4个
@@ -319,6 +339,71 @@ class FeatureEncoder(object):
             features.append(int(attribute_value_max_count >= 2))
             # endregion
         # endregion
+
+        # region BOW 特征
+        if re.search('bo[cw]', self.feature_type):
+            features += self.feature_encoder.transform_sentence(sentence).tolist()
+        # endregion
+
+        return features
+
+    def get_features(self, item, data=None, data_type='ood'):
+        """ 获取特征接口
+
+        Parameters
+        ----------
+        item: list or Utterance
+            当前话语
+        data : pd.DataFrame()
+            全部数据
+        Returns
+        -------
+        feature: list
+            特征
+        """
+        if data_type == 'ood':
+            sentence_id, sentence = item
+            semantic_info = ''
+        else:
+            # id
+            sentence_id = item.sentence_index
+            sentence = item.sentence
+            semantic_info = item.semantic_info
+
+        features = self.sentence_to_features(sentence, semantic_info)
+
+        # 保存当前句的句子特征
+        self.sentence_to_features_temp_dict[sentence_id] = features
+        if data_type != 'ood' and not item.is_id:
+            # 对于 ID 数据集中 非ID话语 就不返回特征了,直接 返回None
+            return
+
+        # region 对话历史特征 - 变成矩阵
+        # (self.history_length + 1) * len(features)
+        # (2+1) * 21 = (历史长度+当前句) * 句子特征长度
+        region_encoding = np.zeros((self.history_length + 1, len(features)), dtype=np.int32)
+        # print(region_encoding.shape)
+        region_encoding[self.history_length] = features
+        for history_id in reversed(np.arange(0, self.history_length, 1)):
+            cur_sentence = item.last_sentence
+            if cur_sentence is None:
+                continue
+            if cur_sentence.sentence_index in self.sentence_to_features_temp_dict:
+                history_sentence_features = self.sentence_to_features_temp_dict[cur_sentence.sentence_index]
+            else:
+                # 还没出现过
+                history_sentence_features = self.sentence_to_features(cur_sentence.sentence, cur_sentence.semantic_info)
+                # 缓存的句子特征
+                self.sentence_to_features_temp_dict[cur_sentence.sentence_index] = history_sentence_features
+            # print(len(history_sentence_features))
+
+            region_encoding[history_id] = history_sentence_features
+        # print(history_id, onehot_encoding)
+        # features = region_encoding.flatten().tolist()
+        features = region_encoding
+
+        # endregion
+
         # print(features)
         # quit()
         return features
@@ -336,12 +421,25 @@ class FeatureEncoder(object):
         self: FeatureEncoder
     
         """
-        # print(self.get_features([u'这款手机外观好不好看？', u'外观设计:【好】']))
+        # print(self.get_features([u'11', u'apple？', u'品牌:【apple】', u''],data))
         # quit()
 
-        train_x = np.asarray(map(self.get_features, data[['Sentence', 'Semantic_Info']].values))
+        id_data, ood_data = data
+        train_x, train_y = [], []
+        if id_data is not None:
+            train_x += [item
+                        for item in map(lambda x: self.get_features(x, data_type='id', data=id_data),
+                                        id_data.iter_utterances(data_type='id')) if item is not None
+                        ]
+            train_y += [item.sentence_mode for item in id_data.iter_utterances(data_type='id')]
+        if ood_data is not None:
+            train_x += map(lambda x: self.get_features(x, data_type='ood'),
+                           ood_data[['Sentence_ID', 'Sentence']].values)
+            train_y += ood_data['Label'].tolist()
 
-        train_y = np.asarray(data['Label'].map(self.label_name_to_index))
+        train_x = np.asarray(train_x)
+        train_y = np.asarray(map(lambda x: self.label_name_to_index[x], train_y))
+        # quit()
         # region 缓存文件
         # 输出到缓存文件 - attribute_names.csv
         temp_file_path = path.join(self.temp_root_path, 'attribute_names.csv')
@@ -350,18 +448,23 @@ class FeatureEncoder(object):
             sys.stderr.write('%d个属性名列表 保存到缓存文件: %s\n' % (len(self.attribute_name_count_dict), temp_file_path))
         # 输出到缓存文件 - features.csv
         temp_file_path = path.join(self.temp_root_path, 'features.csv')
-        features = np.concatenate((train_y.reshape(-1, 1), train_x), axis=1)
-        np.savetxt(temp_file_path,
-                   features,
-                   delimiter=',',
-                   fmt='%d',
-                   header='%d*%d\tLabel-1个 + 语法特征-19个 + 语义特征-2个' % features.shape
-                   )
-        sys.stderr.write('特征文件 保存到缓存文件: %s\n' % temp_file_path)
+        # features = np.concatenate((train_y.reshape(-1, 1), train_x), axis=1)
+        # features = train_x
+        # np.savetxt(temp_file_path,
+        #            features,
+        #            delimiter=',',
+        #            fmt='%d',
+        #            # header='%d*%d*%d\t语法特征-19个 + 语义特征-2个' % features.shape
+        #            )
+        # sys.stderr.write('特征文件 保存到缓存文件: %s\n' % temp_file_path)
         # endregion
 
         sys.stderr.write(
-            '总共有: %d 个样例, %d 个特征, %d 个类别\n' % (train_x.shape[0], train_x.shape[1], len(self.index_to_label_name)))
+            '总共有: %d 个样例, %d个对话长度(含当前句), %d 个特征, %d 个类别\n' % (
+                train_x.shape[0],
+                train_x.shape[1],
+                train_x.shape[2],
+                len(self.index_to_label_name)))
         return train_x, train_y
 
     def fit_transform(self, data):

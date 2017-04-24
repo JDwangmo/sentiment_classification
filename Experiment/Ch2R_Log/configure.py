@@ -8,6 +8,8 @@
 from __future__ import print_function
 from os import path
 import os
+import sys
+import datetime
 
 __version__ = '1.0'
 
@@ -40,4 +42,17 @@ Data_Type = 'id'
 # boc
 # bow
 # rule
-Feature_Type = 'boc_rule'
+# boc_rule_history
+Feature_Type = 'rule'
+# 对话历史的长度
+History_Length = 1
+
+# region 打印变量设置情况
+sys.stderr.write('变量设置情况\n')
+sys.stderr.write('Option: %s\t' % Option)
+sys.stderr.write('Data_Type: %s\n' % Data_Type)
+sys.stderr.write('Feature_Type: %s\t' % Feature_Type)
+sys.stderr.write('History_Length: %d\n' % History_Length)
+sys.stderr.write('现在是: %s\n' % (datetime.datetime.now()))
+sys.stderr.write('-' * 80 + '\n')
+# endregion

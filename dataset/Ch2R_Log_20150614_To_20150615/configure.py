@@ -6,9 +6,11 @@
     Describe:
 """
 from __future__ import print_function
+
+import datetime
 from os import path
 import os
-
+import sys
 __version__ = '1.0'
 
 Package_Root_Path = '/home/jdwang/PycharmProjects/semantic_classification/dataset/Ch2R_Log_20150614_To_20150615'
@@ -28,3 +30,31 @@ if not path.exists(Data_File_Path):
 
 if not path.exists(Temp_Root_Path):
     os.makedirs(Temp_Root_Path)
+
+# ood
+# id
+# id_ood : ID 加上 OOD 混合模型
+Data_Type = 'id'
+# boc_rule
+# bow_rule
+# boc
+# bow
+# rule
+# boc_rule_history
+Feature_Type = 'rule_boc'
+# 对话历史的长度
+History_Length = 1
+
+Verbose = 0
+
+# region 打印变量设置情况
+sys.stderr.write('_' * 80 + '\n')
+sys.stderr.write('-' * 80 + '\n')
+sys.stderr.write('现在是: %s\n' % (datetime.datetime.now()))
+sys.stderr.write('变量设置情况\n')
+sys.stderr.write('Data_Type: %s,\t' % Data_Type)
+sys.stderr.write('Verbose: %s\n' % Verbose)
+sys.stderr.write('Feature_Type: %s,\t' % Feature_Type)
+sys.stderr.write('History_Length: %d\n' % History_Length)
+sys.stderr.write('-' * 80 + '\n')
+# endregion
