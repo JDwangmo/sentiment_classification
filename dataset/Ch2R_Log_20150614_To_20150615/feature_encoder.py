@@ -8,7 +8,6 @@
 from __future__ import print_function
 import numpy as np
 import sys
-from configure import Temp_Root_Path
 from os import path
 import re
 import codecs
@@ -29,7 +28,7 @@ class FeatureEncoder(object):
                  feature_type='bow_rule',
                  index_to_label_name=None,
                  history_length=0,
-                 temp_root_path=Temp_Root_Path,
+                 temp_root_path='',
                  verbose=0
                  ):
         """
@@ -384,8 +383,9 @@ class FeatureEncoder(object):
         region_encoding = np.zeros((self.history_length + 1, len(features)), dtype=np.int32)
         # print(region_encoding.shape)
         region_encoding[self.history_length] = features
+        cur_sentence = item
         for history_id in reversed(np.arange(0, self.history_length, 1)):
-            cur_sentence = item.last_sentence
+            cur_sentence = cur_sentence.last_sentence
             if cur_sentence is None:
                 continue
             if cur_sentence.sentence_index in self.sentence_to_features_temp_dict:

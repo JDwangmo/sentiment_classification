@@ -6,7 +6,7 @@
     Describe:
 """
 from __future__ import print_function
-from data_util1 import read_train_test_data
+from data_util import read_train_test_data
 from feature_encoder import FeatureEncoder
 from configure import Temp_Root_Path, Data_Type, Feature_Type, History_Length
 

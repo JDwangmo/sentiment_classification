@@ -7,12 +7,13 @@
 """
 from configure import Data_Type, Feature_Type
 
-data_type, feature_type, History_Length = 'id', 'rule', 0
+data_type, feature_type, History_Length = 'id', 'rule', 2
+# classifier = 'RF'
 classifier = 'LSTM'
 for step in [1, 2, 3, 4]:
     # step = 2
     count = 0
-    with open('result/结果-20170412//%s_%s_%s_HistoryLength%d_test_result_CV.csv' % (classifier,data_type, feature_type, History_Length), 'r') as fout:
+    with open('result/结果-20170424//%s_%s_%s_HistoryLength%d_test_result_CV.csv' % (classifier,data_type, feature_type, History_Length), 'r') as fout:
         for line in fout:
             line = line.strip()
             if step == 1:
